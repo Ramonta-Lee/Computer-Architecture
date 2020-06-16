@@ -9,8 +9,10 @@ class CPU:
     def __init__(self):
         """Construct a new CPU."""
         self.pc = 0 # program counter
+        # register is where you store what you retrieved from ram(memory)
         self.register = [0] * 8 # variable R
-        self.ram = [0] * 8 # ram is memory
+        # ram is running memory
+        self.ram = [0] * 256 # ram is memory
         
 
     def ram_read(self, address):
@@ -29,7 +31,9 @@ class CPU:
 
     def load(self):
         """Load a program into memory."""
-        address = 0
+        # defines where to write to ram
+        # only used in the load method
+        address = 0 
 
         # For now, we've just hardcoded a program:
 
@@ -43,9 +47,12 @@ class CPU:
             0b00000001, # HLT
         ]
 
+        # brings instructions and all from program and writes to ram (memory)
+        # so it can then be accessed by the CPU
         for instruction in program:
             self.ram_write(instruction, address)
-            address += 1
+            address += 1 
+            # just used to increment through the ram addresses
 
 
     def alu(self, op, reg_a, reg_b):
@@ -79,12 +86,38 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
+
         running = True
 
         while running:
             # instruction register
             ir = self.ram[self.pc]
-            print(ir)
-            running = False
+            
+            if ir == self.ram[0]:
+                # arranges data from bucket
+                # where are you will you put it in your pocket?
+                # this is putting it in your pocket
+                # reg_num is the indice of the reg array
+                reg_num = self.ram[self.pc + 1]
+                value = self.ram[self.pc + 2]
+                self.register[reg_num] = value
+                self.pc += 3
+            
+            # print instruction
+            elif ir == self.ram[3]: 
+                reg_num = self.ram[self.pc + 1]
+                print(self.register[reg_num])
+                self.pc += 2
+            
+            elif ir == self.ram[5]:
+                running = False
+                self.pc += 1
+            
+            else:
+                print(f'Unknown instruction{ir} at address {self.pc}')
+                sys.exit(1)
+
+
+
 
 
