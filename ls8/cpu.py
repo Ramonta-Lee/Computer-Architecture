@@ -21,6 +21,8 @@ class CPU:
         self.branch_table[LDI] = self.handle_ldi
         self.branch_table[PRN] = self.handle_prn
         self.branch_table[MUL] = self.handle_mul
+
+        
         
 
     def ram_read(self, address):
@@ -46,15 +48,19 @@ class CPU:
         address = 0
         with open(filename) as f:
             for line in f:
+                # print(line)
                 line = line.split("#")
+                # print(line)
 
                 try:
                     value = int(line[0], 2)
+                    # print("value", value)
 
                 except ValueError:
                     continue
 
                 # self.ram[address] = value
+                # address += 1
                 self.ram_write(value, address)
                 address += 1
     
@@ -63,14 +69,15 @@ class CPU:
         self.pc += 3
     
     def handle_prn(self):
-        print(self.reg[self.ram_read(self.pc + 1)])
+        print("hello", self.reg[self.ram_read(self.pc + 1)])
+        # self.trace()
         self.pc += 2
 
     def handle_mul(self):
+        # goes to address R0 & R1
+        # reads and returns the values
         reg_1 = self.ram_read(self.pc + 1)
         reg_2 = self.ram_read(self.pc + 2)
-        # prod = self.reg[reg_1] * self.reg[reg_2]
-        # self.reg[reg_1] = prod
 
         # use the alu to run the multiplication on the register values
         self.alu("MUL", reg_1, reg_2)
@@ -80,7 +87,7 @@ class CPU:
 
         # defines where to write to ram
         # only used in the load method
-        # address = 0 
+        # address = 0
 
         # For now, we've just hardcoded a program:
 
@@ -98,7 +105,7 @@ class CPU:
         # so it can then be accessed by the CPU
         # for instruction in program:
         #     self.ram_write(instruction, address)
-        #     address += 1 
+        #     address += 1
             # just used to increment through the ram addresses
 
 
@@ -107,10 +114,14 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
+
         #elif op == "SUB": etc
+        if op == "SUB":
+            self.reg[reg_a] -= self.reg[reg_b]
 
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
+
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -138,6 +149,7 @@ class CPU:
     def run(self):
         """Run the CPU."""
         # instrution register
+        
         ir = LDI
         self.branch_table[ir]()
         ir = LDI
@@ -146,6 +158,12 @@ class CPU:
         self.branch_table[ir]()
         ir = PRN
         self.branch_table[ir]()
+
+
+
+        
+        
+        
 
 
         # running = True
