@@ -8,6 +8,8 @@ PRN = 0b01000111
 MUL = 0b10100010
 PUSH = 0b1000101
 POP = 0b1000110
+CALL = 0b01010000
+RET = 0b01000101
 class CPU:
     """Main CPU class."""
 
@@ -28,6 +30,8 @@ class CPU:
         self.branch_table[HLT] = self.handle_hlt
         self.branch_table[PUSH] = self.handle_push
         self.branch_table[POP] = self.handle_pop
+        self.branch_table[CALL] = self.handle_call
+        self.branch_table[RET] = self.handle_ret
 
         
         
@@ -195,6 +199,34 @@ class CPU:
             print(" %02X" % self.reg[i], end='')
 
         print()
+    
+    def handle_call(self):
+        # store the return address
+        return_addr = self.pc + 2
+
+        # Push on the stack
+        # decrement the start pointer
+        reg[self.sp] -= 1
+        # pushing the return address on to the stack
+        self.ram[self.reg[self.sp]] = return_addr
+
+        # Get the address to call
+        reg_num = self.ram[self.pc + 1]
+        # Move the pointer to this address
+        subroutine_addr = self.reg[reg_num]
+
+        # Call it!
+        # Moves the pointer
+        pc = subroutine_addr
+
+
+
+
+
+    def handle_ret(self):
+        pass
+
+
     
     def handle_hlt(self):
         self.pc += 1
