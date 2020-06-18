@@ -9,7 +9,8 @@ MUL = 0b10100010
 PUSH = 0b1000101
 POP = 0b1000110
 CALL = 0b01010000
-RET = 0b01000101
+RET = 0b00010001
+ADD = 0b10100000
 class CPU:
     """Main CPU class."""
 
@@ -32,6 +33,7 @@ class CPU:
         self.branch_table[POP] = self.handle_pop
         self.branch_table[CALL] = self.handle_call
         self.branch_table[RET] = self.handle_ret
+        self.branch_table[ADD] = self.handle_add
 
         
         
@@ -96,7 +98,12 @@ class CPU:
         self.alu("MUL", reg_1, reg_2)
         self.pc += 3
 
+    def handle_add(self):
+        reg_1 = self.ram_read(self.pc + 1)
+        reg_2 = self.ram_read(self.pc + 2)
 
+        self.alu("ADD", reg_1, reg_2)
+        self.pc += 3
 
         # defines where to write to ram
         # only used in the load method
@@ -171,7 +178,7 @@ class CPU:
             self.reg[reg_a] += self.reg[reg_b]
 
         #elif op == "SUB": etc
-        if op == "SUB":
+        elif op == "SUB":
             self.reg[reg_a] -= self.reg[reg_b]
 
         elif op == "MUL":
@@ -204,27 +211,46 @@ class CPU:
         # store the return address
         return_addr = self.pc + 2
 
-        # Push on the stack
         # decrement the start pointer
-        reg[self.sp] -= 1
+        self.reg[self.sp] -= 1
         # pushing the return address on to the stack
         self.ram[self.reg[self.sp]] = return_addr
 
         # Get the address to call
         reg_num = self.ram[self.pc + 1]
-        # Move the pointer to this address
+        # store the sub addr
         subroutine_addr = self.reg[reg_num]
 
         # Call it!
-        # Moves the pointer
-        pc = subroutine_addr
-
-
+        # Moves the pointer to the sub
+        self.pc = subroutine_addr
 
 
 
     def handle_ret(self):
-        pass
+        # Get the location of what you want to remove
+        # return_addr = self.ram[self.pc + 2]
+
+        # # In the register, at the return address. Set it equal to memory at the register address where the start pointer is pointing
+        # self.reg[return_addr] = self.ram[self.reg[self.sp]]
+
+        # # increment the start pointer
+        # self.reg[self.sp] += 1
+
+        
+        # self.pc = return_addr
+
+
+        reg_indx = self.ram[self.pc + 1]
+        # print("val", value)
+        self.reg[reg_indx] = self.ram[self.reg[self.sp]] # sets register at reg index equal to top of the stack (by way of pointer; SP)
+        
+
+        # increment the start pointer
+        self.reg[self.sp] += 1
+
+        # store popped element from stack in the pc
+        self.pc = self.reg[reg_indx]
 
 
     
