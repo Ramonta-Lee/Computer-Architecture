@@ -6,6 +6,8 @@ HLT = 0b00000001
 LDI = 0b10000010
 PRN = 0b01000111
 MUL = 0b10100010
+PUSH = 0b1000101
+POP = 0b1000110
 class CPU:
     """Main CPU class."""
 
@@ -17,10 +19,15 @@ class CPU:
         self.reg = [0] * 8 # variable R0-R7
         # ram is running memory
         self.ram = [0] * 256 # ram is memory
+        self.sp = 7
+        self.reg[self.sp] = 0xF4 # where in
         self.branch_table = {}
         self.branch_table[LDI] = self.handle_ldi
         self.branch_table[PRN] = self.handle_prn
         self.branch_table[MUL] = self.handle_mul
+        self.branch_table[HLT] = self.handle_hlt
+        self.branch_table[PUSH] = self.handle_push
+        self.branch_table[POP] = self.handle_pop
 
         
         
@@ -30,6 +37,7 @@ class CPU:
         # MAR
 
         # takes address and returns the value at the address
+        # print(self.ram[address])
         return self.ram[address]
     
     def ram_write(self, value, address):
@@ -37,6 +45,7 @@ class CPU:
         
         # takes an address and a value to write to it
         self.ram[address] = value
+        
 
 
     def load(self):
@@ -107,7 +116,49 @@ class CPU:
         #     self.ram_write(instruction, address)
         #     address += 1
             # just used to increment through the ram addresses
+    
+    def handle_push(self):
+        # decrement SP
+        self.reg[self.sp] -= 1
 
+        # Get the value we want to store from the register
+        # address
+        reg_1 = self.ram_read(self.pc + 1)
+        
+
+
+        # this is the value that we want to push
+        value = self.reg[reg_1]
+
+        # Figure out where to store
+        top_of_stack_addr = self.reg[self.sp]
+
+        # Store it!
+        # self.ram[top_of_stack_addr] = value
+        # print("val", value)
+
+        self.ram_write(value, top_of_stack_addr)
+        # print("ram", self.ram)
+
+        self.pc += 2
+    
+    def handle_pop(self):
+        # check to see if stack is empty
+        if self.reg[self.sp] == 0xF4:
+            return print("Empty Stack")
+
+        # get the location of what we are trying to remove
+        reg_indx = self.ram_read(self.pc + 1)
+        # print("val", value)
+        self.reg[reg_indx] = self.ram[self.reg[self.sp]] # sets register at reg index equal to top of the stack (by way of pointer; SP)
+        
+
+        # increment the start pointer
+        self.reg[self.sp] += 1
+
+        # increment the program counter
+        self.pc += 2
+        
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -144,20 +195,34 @@ class CPU:
             print(" %02X" % self.reg[i], end='')
 
         print()
+    
+    def handle_hlt(self):
+        self.pc += 1
+        self.running = False
+        return self.running
 
 
     def run(self):
         """Run the CPU."""
         # instrution register
+        self.running = True
+        while self.running:
+            ir = self.ram[self.pc]
+            if ir in self.branch_table:
+                self.branch_table[ir]()
+            
+            else:
+                print(f'Unknown instruction: {ir}, at address PC: {self.pc}')
+                sys.exit(1)
         
-        ir = LDI
-        self.branch_table[ir]()
-        ir = LDI
-        self.branch_table[ir]()
-        ir = MUL
-        self.branch_table[ir]()
-        ir = PRN
-        self.branch_table[ir]()
+        # ir = LDI
+        # self.branch_table[ir]()
+        # ir = LDI
+        # self.branch_table[ir]()
+        # ir = MUL
+        # self.branch_table[ir]()
+        # ir = PRN
+        # self.branch_table[ir]()
 
 
 
