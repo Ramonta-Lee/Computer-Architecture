@@ -73,6 +73,8 @@ Memory map:
 
 The SP points at the value at the top of the stack (most recently pushed), or at
 address `F4` if the stack is empty.
+R7 is the SP in the register
+The SP has the index or mailbox number where the top of the stack is located
 
 
 ## Interrupts
@@ -122,7 +124,7 @@ When the LS-8 is booted, the following steps occur:
 * `PC` and `FL` registers are cleared to `0`.
 * RAM is cleared to `0`.
 
-Subsequently, the program can be loaded into RAM starting at address `0x00`.
+Subsequently, the program can be loaded into RAM starting at address `0x00`. (hex)
 
 ## Execution Sequence
 
@@ -171,6 +173,7 @@ Glossary:
 
 * **immediate**: takes a constant integer value as an argument
 * **register**: takes a register number as an argument
+* how many registers can be manipulated in any one instruction
 
 * `iiiiiiii`: 8-bit immediate value
 * `00000rrr`: Register number

@@ -15,6 +15,11 @@ CMP = 0b10100111
 JEQ = 0b01010101
 JNE = 0b01010110
 JMP = 0b01010100
+AND = 0b10101000
+NOT = 0b01101001
+OR = 0b10101010
+XOR = 0b10101011
+SHL = 0b10101100
 class CPU:
     """Main CPU class."""
 
@@ -42,7 +47,12 @@ class CPU:
             CMP: self.handle_cmp,
             JEQ: self.handle_jeq,
             JNE: self.handle_jne,
-            JMP: self.handle_jmp
+            JMP: self.handle_jmp,
+            AND: self.handle_and,
+            NOT: self.handle_not,
+            OR: self.handle_or,
+            XOR: self.handle_xor,
+            SHL: self.handle_shl,
         }
 
 
@@ -92,7 +102,7 @@ class CPU:
         self.pc += 3
     
     def handle_prn(self):
-        print("hello", self.reg[self.ram_read(self.pc + 1)])
+        print(self.reg[self.ram_read(self.pc + 1)])
         # self.trace()
         self.pc += 2
 
@@ -184,6 +194,38 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
+        
+        elif op == "AND":
+            for each in range(len(self.reg[reg_a] - 1)):
+                self.reg[reg_a][i] *= self.reg[reg_b][i]
+
+        elif op == "OR":
+            for each in range(len(self.reg[reg_a] - 1)):
+                if self.reg[reg_a][i] and self.reg[reg_b][i] == 0:
+                    self.reg[reg_a][i] = 0
+                
+                else:
+                    self.reg[reg_a][i] = 1
+        
+        elif op == "XOR":
+            for each in range(len(self.reg[reg_a] - 1)):
+                if self.reg[reg_a][i] == self.reg[reg_b][i]:
+                    self.reg[reg_a][i] = 0
+                
+                else:
+                    self.reg[reg_a][i] = 1
+        
+        elif op == "NOT":
+            for each in self.reg[reg_a]:
+                if each == 0:
+                    each = 1
+                
+                else:
+                    each = 0
+        
+        elif op == "SHL":
+
+
 
         #elif op == "SUB": etc
         elif op == "SUB":
@@ -341,7 +383,7 @@ class CPU:
             self.pc = self.reg[reg_index]
 
             #  does same as the two lines above
-            # self.pc = self.reg[self.ram[self.pc + 1]] # 2  self.reg at index 2
+            # self.pc = self.reg[self.ram[self.pc + 1]]  
 
         else:
             self.pc += 2
@@ -357,3 +399,78 @@ class CPU:
             self.pc = self.reg[reg_index]
         
         else: self.pc += 2
+
+    
+    def handle_and(self):
+        reg_1 = self.ram_read(self.pc + 1)
+        reg_2 = self.ram_read(self.pc + 2)
+
+        self.alu("AND", reg_1, reg_2)
+        self.pc += 3
+
+    def handle_not(self):
+        reg_1 = self.ram_read(self.pc + 1)
+        reg_2 = self.ram_read(self.pc + 2)
+
+        self.alu("NOT", reg_1, reg_2)
+        self.pc += 2
+    
+    def handle_or(self):
+        reg_1 = self.ram_read(self.pc + 1)
+        reg_2 = self.ram_read(self.pc + 2)
+
+        self.alu("OR", reg_1, reg_2)
+        self.pc += 3
+
+    
+    def handle_xor(self):
+        reg_1 = self.ram_read(self.pc + 1)
+        reg_2 = self.ram_read(self.pc + 2)
+
+        self.alu("XOR", reg_1, reg_2)
+        self.pc += 3
+
+
+        """
+        NOT (complement): sets the given bits to their opposite
+        ex: NOT 0111 (decimal 7)
+            =   1000 (decimal 8)
+
+
+        AND: performs multiplication at each bit
+             
+        ex: 0|1|0|1 (decimal 5)
+        AND 0|0|1|1 (decimal 3)
+        =   0|0|0|1 (decimal 1)
+
+
+        OR: sets each position to 0 if both bits are 0, otherwise the result is 1
+        ex: 0101 (decimal 5)
+        OR  0011 (decimal 3)
+        =   0111 (decimal 7)
+
+
+        XOR: sets the result to 1 if only one of the bits is 1, but will be 0 if both are 0 or BOTH are ***1***
+        
+        if they are different make it 1 if they are the same make it 0
+        ex: 0101 (decimal 5)
+        XOR 0011 (decimal 3)
+        =   0110 (decimal 6)
+
+        * Can also be used to toggle on and off specific bits (Boolean states)
+        ex: 0010 (decimal 2)
+            FFTF
+        XOR 1010 (decimal 10)
+        =   1000 (decimal 8)
+            TFFT (turned off flipped 2nd and 4th position)
+        
+        * Performing XOR on a value against itself always yields zero
+
+        SHL: places a zero at the beginning and pops off at [-1]
+
+        SHR: places a zero at the end (128th bit) and pops off at [0]
+
+
+
+
+        """
