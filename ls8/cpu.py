@@ -11,6 +11,10 @@ POP = 0b1000110
 CALL = 0b01010000
 RET = 0b00010001
 ADD = 0b10100000
+CMP = 0b10100111
+JEQ = 0b01010101
+JNE = 0b01010110
+JMP = 0b01010100
 class CPU:
     """Main CPU class."""
 
@@ -18,25 +22,29 @@ class CPU:
     def __init__(self):
         """Construct a new CPU."""
         self.pc = 0 # program counter
+        self.flag = 0b00000000
         # register is where you store what you retrieved from ram(memory)
         self.reg = [0] * 8 # variable R0-R7
         # ram is running memory
         self.ram = [0] * 256 # ram is memory
         self.sp = 7
         self.reg[self.sp] = 0xF4 # where in
-        self.branch_table = {}
-        self.branch_table[LDI] = self.handle_ldi
-        self.branch_table[PRN] = self.handle_prn
-        self.branch_table[MUL] = self.handle_mul
-        self.branch_table[HLT] = self.handle_hlt
-        self.branch_table[PUSH] = self.handle_push
-        self.branch_table[POP] = self.handle_pop
-        self.branch_table[CALL] = self.handle_call
-        self.branch_table[RET] = self.handle_ret
-        self.branch_table[ADD] = self.handle_add
+        self.branch_table = {
+            LDI:self.handle_ldi,
+            PRN:self.handle_prn,
+            MUL:self.handle_mul,
+            HLT:self.handle_hlt,
+            PUSH: self.handle_push,
+            POP:self.handle_pop,
+            CALL: self.handle_call,
+            RET:self.handle_ret,
+            ADD:self.handle_add,
+            CMP: self.handle_cmp,
+            JEQ: self.handle_jeq,
+            JNE: self.handle_jne,
+            JMP: self.handle_jmp
+        }
 
-        
-        
 
     def ram_read(self, address):
         # Memory_Address_Register = MAR
@@ -45,7 +53,7 @@ class CPU:
         # takes address and returns the value at the address
         # print(self.ram[address])
         return self.ram[address]
-    
+
     def ram_write(self, value, address):
         # Memory_Data_Register = MDR
         
@@ -183,6 +191,21 @@ class CPU:
 
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
+        
+        elif op == "CMP":
+
+            if self.reg[reg_a] > self.reg[reg_b]:
+                #100
+                self.flag = 0b00000100
+            
+            elif self.reg[reg_a] < self.reg[reg_b]:
+                #010
+                self.flag = 0b00000010
+            
+            else:
+                  self.flag = 0b00000001
+            
+            
 
         else:
             raise Exception("Unsupported ALU operation")
@@ -250,6 +273,8 @@ class CPU:
         self.reg[self.sp] += 1
 
         # store popped element from stack in the pc
+        # return the counter to where we were before the call (after call instruction
+        #)
         self.pc = self.reg[reg_indx]
 
 
@@ -272,29 +297,10 @@ class CPU:
             else:
                 print(f'Unknown instruction: {ir}, at address PC: {self.pc}')
                 sys.exit(1)
-        
-        # ir = LDI
-        # self.branch_table[ir]()
-        # ir = LDI
-        # self.branch_table[ir]()
-        # ir = MUL
-        # self.branch_table[ir]()
-        # ir = PRN
-        # self.branch_table[ir]()
-
-
-
-        
-        
-        
-
-
-        # running = True
 
         # while running:
         #     # instruction register
         #     ir = self.ram[self.pc]
-            
         #     if ir == self.ram[0]:
         #         # arranges data from bucket
         #         # where will you put it in your pocket?
@@ -304,25 +310,50 @@ class CPU:
         #         value = self.ram[self.pc + 2]
         #         self.register[reg_num] = value
         #         self.pc += 3
-            
+
         #     # print instruction
-        #     elif ir == self.ram[3]: 
+        #     elif ir == self.ram[3]:
         #         reg_num = self.ram[self.pc + 1]
         #         print(self.register[reg_num])
         #         self.pc += 2
 
         #     elif ir == self.ram[6]:
         #         reg_num = self.ram[self.pc]
-            
+
         #     elif ir == self.ram[5]:
         #         running = False
         #         self.pc += 1
-            
-            
+
         #     else:
         #         print(f'Unknown instruction{ir} at address {self.pc}')
         #         sys.exit(1)
+    
+    def handle_cmp(self):
+        reg_1 = self.ram_read(self.pc + 1)
+        reg_2 = self.ram_read(self.pc + 2)
 
+        self.alu("CMP", reg_1, reg_2)
+        self.pc += 3
 
+    def handle_jeq(self):
+        if self.flag == 0b00000001:
+            reg_index = self.ram[self.pc +1]
+            self.pc = self.reg[reg_index]
 
+            #  does same as the two lines above
+            # self.pc = self.reg[self.ram[self.pc + 1]] # 2  self.reg at index 2
 
+        else:
+            self.pc += 2
+
+    def handle_jmp(self):
+        reg_index = self.ram[self.pc + 1]
+        self.pc = self.reg[reg_index]
+        
+
+    def handle_jne(self):
+        if self.flag != 0b00000001:
+            reg_index = self.ram[self.pc + 1] # get the register reference number
+            self.pc = self.reg[reg_index]
+        
+        else: self.pc += 2
